@@ -1,25 +1,53 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import GrammarInput from "./components/GrammarInput";
+import FirstFollow from "./components/FirstFollow";
+import ParsingTable from "./components/ParsingTable";
+import StringParser from "./components/StringParser";
 
-function App() {
+import { parseGrammar } from "./utils/grammarParser";
+import { computeFirst } from "./utils/first";
+import { computeFollow } from "./utils/follow";
+import { buildLL1Table } from "./utils/table";
+
+export default function App() {
+  const [grammarText, setGrammarText] = useState("");
+  const [first, setFirst] = useState({});
+  const [follow, setFollow] = useState({});
+  const [table, setTable] = useState({});
+  const [grammarObj, setGrammarObj] = useState({});
+  const [startSymbol, setStartSymbol] = useState("");
+
+  const handleParse = () => {
+    try {
+      const grammar = parseGrammar(grammarText);
+      const start = Object.keys(grammar)[0];
+      const firstSet = computeFirst(grammar);
+      const followSet = computeFollow(grammar, firstSet, start);
+      const ll1Table = buildLL1Table(grammar, firstSet, followSet);
+
+      setFirst(firstSet);
+      setFollow(followSet);
+      setTable(ll1Table);
+      setGrammarObj(grammar);
+      setStartSymbol(start);
+    } catch (err) {
+      console.error(err);
+      alert("Error parsing grammar. Check format and spaces!");
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: "20px" }}>
+      <h1>LL(1) Grammar Visualizer & Parser</h1>
+      <GrammarInput grammarText={grammarText} setGrammarText={setGrammarText} />
+      <button onClick={handleParse} style={{ margin: "10px", padding: "5px 10px" }}>Parse Grammar</button>
+
+      <FirstFollow first={first} follow={follow} />
+      <ParsingTable table={table} />
+
+      {Object.keys(grammarObj).length > 0 && (
+        <StringParser grammar={grammarObj} table={table} start={startSymbol} />
+      )}
     </div>
   );
 }
-
-export default App;
