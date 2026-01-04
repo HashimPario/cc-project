@@ -2,6 +2,17 @@ export function buildLL1Table(grammar, first, follow) {
   const table = {};
   const nonTerminals = new Set(Object.keys(grammar));
   const isNonTerminal = (sym) => nonTerminals.has(sym);
+  const setCell = (nt, term, production) => {
+    if (table[nt][term] == null) {
+      table[nt][term] = production;
+      return;
+    }
+
+    // If there's already an entry and it differs, keep a visible conflict.
+    if (table[nt][term] !== production) {
+      table[nt][term] = `${table[nt][term]} | ${production}`;
+    }
+  };
   
   Object.keys(grammar).forEach(nt => {
     table[nt] = {};
@@ -41,13 +52,13 @@ export function buildLL1Table(grammar, first, follow) {
 
       // Add FIRST symbols to table
       prodFirst.forEach(symbol => {
-        if (symbol !== 'ε') table[nt][symbol] = prodStr;
+        if (symbol !== 'ε') setCell(nt, symbol, prodStr);
       });
 
       // If production can generate ε, add entries for FOLLOW(nt)
       if (prodFirst.has('ε')) {
         follow[nt].forEach(f => {
-          table[nt][f] = 'ε';
+          setCell(nt, f, prodStr);
         });
       }
     });

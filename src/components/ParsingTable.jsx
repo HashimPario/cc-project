@@ -1,6 +1,28 @@
 import React from "react";
 
 export default function ParsingTable({ table }) {
+  const terminals =
+    table && Object.keys(table).length > 0
+      ? Array.from(
+          new Set(
+            Object.values(table).flatMap((row) =>
+              row ? Object.keys(row) : []
+            )
+          )
+        ).sort((a, b) => {
+          // Match typical LL(1) table order used in class notes: +, *, id, (, ), $
+          const preferred = ["+", "*", "id", "(", ")", "$"];
+          const ia = preferred.indexOf(a);
+          const ib = preferred.indexOf(b);
+          if (ia !== -1 || ib !== -1) {
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+          }
+          return a.localeCompare(b);
+        })
+      : [];
+
   return (
     <div>
       <h3>LL(1) Parsing Table</h3>
@@ -8,18 +30,19 @@ export default function ParsingTable({ table }) {
         <thead>
           <tr>
             <th>Non-Terminal</th>
-            {table && Object.keys(table).length > 0 &&
-              Array.from(new Set([].concat(...Object.values(table).map(t => Object.keys(t))))).map(term => (
-                <th key={term}>{term}</th>
-              ))
-            }
+            {terminals.map((term) => (
+              <th key={term}>{term}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {table && Object.entries(table).map(([nt, row]) => (
+          {table &&
+            Object.entries(table).map(([nt, row]) => (
             <tr key={nt}>
               <td>{nt}</td>
-              {Object.keys(row).map(col => <td key={col}>{row[col]}</td>)}
+              {terminals.map((t) => (
+                <td key={`${nt}:${t}`}>{row?.[t] ?? ""}</td>
+              ))}
             </tr>
           ))}
         </tbody>
