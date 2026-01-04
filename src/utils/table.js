@@ -1,5 +1,6 @@
 export function buildLL1Table(grammar, first, follow) {
   const table = {};
+  
   Object.keys(grammar).forEach(nt => {
     table[nt] = {};
 
@@ -18,7 +19,7 @@ export function buildLL1Table(grammar, first, follow) {
           first[symbol].forEach(f => {
             if (f !== 'ε') prodFirst.add(f);
           });
-          if (!first[symbol].has('ε')) break;
+          if (!first[symbol].includes('ε')) break;
         }
         if (i === prod.length - 1) prodFirst.add('ε');
       }
@@ -39,5 +40,8 @@ export function buildLL1Table(grammar, first, follow) {
 
   return table;
 }
+
+
+
 
 

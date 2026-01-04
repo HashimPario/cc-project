@@ -24,33 +24,37 @@ export function parseString(grammar, table, inputStr, start) {
     if (!top || !node) break;
 
     // Terminal
-    if (top === currentInput) {
-      node.children.push({ value: currentInput, children: [] });
-      i++;
+    if (!grammar[top]) {
+      if (top === currentInput) {
+        node.value = currentInput; // mark terminal
+        i++;
+      } else if (top === 'ε') {
+        node.value = 'ε'; // ε production
+      } else {
+        // terminal mismatch
+        return { accepted: false, tree: null };
+      }
     }
-    // Non-terminal in table
-    else if (table[top] && table[top][currentInput]) {
-      const prod = table[top][currentInput].split(' ');
+    // Non-terminal
+    else {
+      const prodStr = table[top][currentInput];
+      if (!prodStr) return { accepted: false, tree: null };
+
+      const prod = prodStr.split(' ');
       const childrenNodes = prod.map(s => ({ value: s, children: [] }));
 
-      // push symbols in reverse for stack
+      // push children in reverse for stack
       for (let j = prod.length - 1; j >= 0; j--) {
-        if (prod[j] !== 'ε') {
-          stack.push(prod[j]);
-          nodeStack.push(childrenNodes[j]);
-        }
+        stack.push(prod[j]);
+        nodeStack.push(childrenNodes[j]);
       }
 
       node.children.push(...childrenNodes);
     }
-    else {
-      // no matching table entry
-      return { accepted: false, tree: null };
-    }
   }
 
-  // accept only if input fully consumed and stack empty
-  if (i === input.length && stack.length === 0) {
+  // accept only if input fully consumed (i points to $) and stack empty
+  if (i === input.length - 1 && stack.length === 0) {
     return { accepted: true, tree: treeRoot };
   }
 
