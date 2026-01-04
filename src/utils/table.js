@@ -1,5 +1,7 @@
 export function buildLL1Table(grammar, first, follow) {
   const table = {};
+  const nonTerminals = new Set(Object.keys(grammar));
+  const isNonTerminal = (sym) => nonTerminals.has(sym);
   
   Object.keys(grammar).forEach(nt => {
     table[nt] = {};
@@ -8,20 +10,33 @@ export function buildLL1Table(grammar, first, follow) {
       const prodStr = prod.join(' ');
 
       // Compute FIRST of the production
-      let prodFirst = new Set();
+      const prodFirst = new Set();
+      if (prod.length === 0) {
+        prodFirst.add('ε');
+      } else {
+        for (let i = 0; i < prod.length; i++) {
+          const symbol = prod[i];
+          if (symbol === 'ε') {
+            prodFirst.add('ε');
+            break;
+          }
 
-      for (let i = 0; i < prod.length; i++) {
-        const symbol = prod[i];
-        if (!grammar[symbol]) { // terminal
-          prodFirst.add(symbol);
-          break;
-        } else { // non-terminal
+          if (!isNonTerminal(symbol)) { // terminal
+            prodFirst.add(symbol);
+            break;
+          }
+
+          // non-terminal: add FIRST(symbol) - {ε}
           first[symbol].forEach(f => {
             if (f !== 'ε') prodFirst.add(f);
           });
-          if (!first[symbol].includes('ε')) break;
+
+          // if FIRST(symbol) doesn't contain ε, stop
+          if (!first[symbol].has('ε')) break;
+
+          // if we reached end and all can derive ε
+          if (i === prod.length - 1) prodFirst.add('ε');
         }
-        if (i === prod.length - 1) prodFirst.add('ε');
       }
 
       // Add FIRST symbols to table

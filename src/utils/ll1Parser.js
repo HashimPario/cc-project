@@ -3,6 +3,8 @@ export function parseString(grammar, table, inputStr, start) {
   const input = inputStr
     .replace(/\(/g, ' ( ')
     .replace(/\)/g, ' ) ')
+    .replace(/\+/g, ' + ')
+    .replace(/\*/g, ' * ')
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ');
